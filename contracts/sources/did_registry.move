@@ -169,15 +169,15 @@ public fun get_did_type_info(did_type: u8): (String, String, vector<String>, u64
     if (did_type == DID_AGE_VERIFY) {
         (
             string::utf8(b"18+ Age Verification"),
-            string::utf8(b"Verify user is 18 years or older using Aadhar and face verification"),
-            vector[string::utf8(b"aadhar_qr"), string::utf8(b"face_capture")],
+            string::utf8(b"Verify user is 18 years or older using Ghana Card and face verification"),
+            vector[string::utf8(b"ghana_card"), string::utf8(b"face_capture")],
             365 // validity epochs
         )
     } else if (did_type == DID_CITIZENSHIP_VERIFY) {
         (
-            string::utf8(b"Indian Citizenship Verification"),
-            string::utf8(b"Verify Indian citizenship using Aadhar document verification"),
-            vector[string::utf8(b"aadhar_qr"), string::utf8(b"face_capture")],
+            string::utf8(b"Ghana Citizenship Verification"),
+            string::utf8(b"Verify Ghanaian citizenship using Ghana Card or Passport verification"),
+            vector[string::utf8(b"ghana_card"), string::utf8(b"ghana_passport"), string::utf8(b"face_capture")],
             730 // validity epochs
         )
     } else {
@@ -308,9 +308,9 @@ public fun claim_did_nft(
     
     // Create image URL based on DID type
     let image_url = if (user_did.did_type == DID_AGE_VERIFY) {
-        url::new_unsafe_from_bytes(b"https://imgs.search.brave.com/yP61t4k8614JXcqslXHKA7c31dXau70lu0P4lx22PBA/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/cHJlbWl1bS12ZWN0/b3IveWVhcnMtcHJv/aGliaXRpb24tc2ln/bi1hZHVsdHMtb25s/eS1udW1iZXItZWln/aHRlZW4tcmVkLWNy/b3NzZWQtY2lyY2xl/LXN5bWJvbHMtaXNv/bGF0ZWRfMTQ0OTIw/LTI3ODguanBnP3Nl/bXQ9YWlzX2h5YnJp/ZCZ3PTc0MCZxPTgw")
+        url::new_unsafe_from_bytes(b"https://imgs.search.brave.com/ghana_age_verify_nft.png")
     } else {
-        url::new_unsafe_from_bytes(b"https://imgs.search.brave.com/4bjc1nsux7zaGGXmX9VK65NiF4L2U_5ZLtZXYWofYSs/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvODQ0/NjY3NzYyL3Bob3Rv/L2RlZmluaXRpb24t/b2YtY2l0aXplbnNo/aXAuanBnP3M9NjEy/eDYxMiZ3PTAmaz0y/MCZjPWYtd3d5TXd2/QnMtQ2d0TVFkNlFv/M3VFRG9pZGY2cEEz/UjMyeUdwTXVmZ1E9")
+        url::new_unsafe_from_bytes(b"https://imgs.search.brave.com/ghana_citizenship_nft.png")
     };
     
     // Create SoulBound NFT with complete verification data for SDK
