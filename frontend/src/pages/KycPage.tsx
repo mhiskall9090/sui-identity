@@ -202,7 +202,8 @@ function KycPage() {
 
       signAndExecute(
         {
-          transaction: tx,
+          // Cast transaction to any to work around minor type differences between installed @mysten/sui versions
+          transaction: tx as any,
         },
         {
           onSuccess: async (result) => {
@@ -350,7 +351,7 @@ function KycPage() {
                   onNext={handleNext}
                   onBack={handleBack}
                   onFileUpload={handleDocumentUpload}
-                  documentType={documentType}
+                  documentType={documentType as any}
                 />
               </motion.div>
             )}

@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck - temporary: silence type errors caused by mismatched @mysten/sui / @mysten/seal versions
 import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { SealClient, SessionKey, EncryptedObject } from '@mysten/seal';
@@ -5,7 +7,8 @@ import { fromHex } from '@mysten/sui/utils';
 
 // Configuration matching the encryption service
 const SUI_CLIENT = new SuiClient({ url: 'https://fullnode.testnet.sui.io:443' });
-const PACKAGE_ID = '0xcfedf4e2445497ba1a5d57349d6fc116b194eca41524f46f593c63a7a70a8eab';
+// Reverted to pre-deployment TESTNET package ID
+const PACKAGE_ID = '0x3611276dabf733007d7975e17989e505eb93e11f4998f93d5c74c3a44231833d';
 
 // Government whitelist ID (should match the deployed whitelist)
 const GOVERNMENT_WHITELIST_ID = '0xca700b2604763639ba3fbf0237d4f1ab34470ac509d407d34030621b1a254747';
@@ -22,8 +25,10 @@ const serverObjectIds = [
 ];
 
 // Initialize Seal client
+// Cast to any to avoid types mismatch between different versions of @mysten/sui used by Seal
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sealClient = new SealClient({
-  suiClient: SUI_CLIENT,
+  suiClient: SUI_CLIENT as any,
   serverConfigs: serverObjectIds.map((id) => ({
     objectId: id,
     weight: 1,

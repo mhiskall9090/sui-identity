@@ -26,6 +26,9 @@ const FaceVerificationStep: React.FC<FaceVerificationStepProps> = ({ onNext, onB
   const [error, setError] = useState<string | null>(null);
   const [faceResult, setFaceResult] = useState<FaceMatchResult | null>(null);
 
+  // Silence unused prop warning when documentData isn't needed in this component
+  void documentData;
+
   // const API_BASE = 'http://localhost:8000';
 
   // const handleFaceVerification = async () => {
