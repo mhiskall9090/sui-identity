@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+/* Toast progress bar styling */
+.toast-progress {
+  background: linear-gradient(135deg, #00BFFF, #2d9eff) !important;
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+button {
+  cursor: pointer;
+}
+
+body {
+  margin: 0;
+  font-family: "Outfit", sans-serif,
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.outfit {
+  font-family: "Outfit", sans-serif;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
