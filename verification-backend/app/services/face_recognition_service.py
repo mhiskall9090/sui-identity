@@ -102,7 +102,7 @@ class HighAccuracyFaceService:
             # Handle specific DeepFace errors
             if "face could not be detected" in error_msg:
                 if "img1" in error_msg:
-                    return self._error_result("No face detected in Aadhaar image", "NO_FACE_REFERENCE")
+                    return self._error_result("No face detected in ID document", "NO_FACE_REFERENCE")
                 else:
                     return self._error_result("No face detected in captured image", "NO_FACE_LIVE")
             

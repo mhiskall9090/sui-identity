@@ -42,7 +42,10 @@ class IDData(BaseModel):
     phone: Optional[str] = None
     address: Optional[str] = None
     id_number: Optional[str] = None
-    country: Optional[str] = None
+    country: str = "GH"  # Default to Ghana
+    doc_type: str = "ghana_card"  # ghana_card or passport
+    photo_base64: Optional[str] = None
+    mrz_data: Optional[dict] = None  # For passport MRZ data
 
     @validator('date_of_birth')
     def validate_dob(cls, v):

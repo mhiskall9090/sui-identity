@@ -3,10 +3,11 @@ from typing import Optional, List
 from datetime import datetime
 from enum import Enum
 
+from .document_types import DocumentType, VerificationType
+
 class DIDType(str, Enum):
-    AGE_VERIFICATION = "age_verification"
-    CITIZENSHIP_VERIFICATION = "citizenship_verification"
-    IDENTITY_VERIFICATION = "identity_verification"
+    AGE_VERIFICATION = VerificationType.AGE_VERIFICATION
+    CITIZENSHIP_VERIFICATION = VerificationType.CITIZENSHIP_VERIFICATION
 
 class EncryptionStatus(str, Enum):
     ENCRYPTED = "encrypted"

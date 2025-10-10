@@ -1,5 +1,5 @@
-# Aadhaar OCR + Face Match + OTP Verification System - Backend
-# Python FastAPI Backend with OCR, Face Recognition, and OTP Verification
+# SuiVerify Identity Verification System - Backend
+# Python FastAPI Backend
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +13,7 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
-from app.routers import aadhar, face, otp, user, kyc, encryption, credentials
+from app.routers import face, otp, user, kyc, encryption, credentials, document_verification
 from app.services.ocr_service import OCRService
 from app.services.face_recognition_service import get_face_recognition_service
 from app.services.otp_service import OTPService
@@ -81,8 +81,8 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 app = FastAPI(
-    title="ID OCR + Face Match + OTP Verification System",
-    description="Secure ID document verification with OCR, face recognition, and OTP",
+    title="SuiVerify Identity Verification System",
+    description="Secure identity verification with OCR, face recognition, and OTP. Supports Ghana Card and Ghana Passport verification.",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -108,7 +108,7 @@ app.add_middleware(
 # Include routers
 app.include_router(user.router, prefix="/api", tags=["User Management"])
 app.include_router(kyc.router, prefix="/api", tags=["KYC Verification"])
-app.include_router(aadhar.router, prefix="/api/aadhaar", tags=["Aadhaar OCR"])
+app.include_router(document_verification.router, prefix="/api/identity", tags=["Identity Document Processing"])
 app.include_router(face.router, prefix="/api/face", tags=["Face Recognition"])
 app.include_router(otp.router, prefix="/api/otp", tags=["OTP Verification"])
 app.include_router(encryption.router, prefix="/api", tags=["Encryption Metadata"])
