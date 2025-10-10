@@ -10,7 +10,8 @@ async function main() {
   const sdk = new SuiVerifySDK({
     network: 'testnet',
     rpcUrl: 'https://fullnode.testnet.sui.io:443',
-    packageId: '0xcfedf4e2445497ba1a5d57349d6fc116b194eca41524f46f593c63a7a70a8eab' // Your actual package ID
+  // Example uses the TESTNET package ID used before deployment
+  packageId: '0x3611276dabf733007d7975e17989e505eb93e11f4998f93d5c74c3a44231833d' // Your actual package ID
   });
 
   try {
