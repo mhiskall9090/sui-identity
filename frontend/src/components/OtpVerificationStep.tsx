@@ -3,26 +3,17 @@ import { ChevronLeft, Phone, Loader2, CheckCircle, AlertCircle } from 'lucide-re
 import { toast } from 'react-toastify';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { colors } from '../brand';
-
-interface AadhaarData {
-  name?: string;
-  dob?: string;
-  gender?: string;
-  phone_number?: string;
-  address?: string;
-  aadhaar_number?: string;
-  aadhaar_photo_base64?: string;
-}
+import { DocumentData } from './types';
 
 interface OtpVerificationStepProps {
   onNext: () => void;
   onBack: () => void;
   phoneNumber: string;
-  aadhaarData?: AadhaarData;
+  documentData?: DocumentData;
   verificationType?: string; // 'above18' or 'citizenship'
 }
 
-const OtpVerificationStep: React.FC<OtpVerificationStepProps> = ({ onNext, onBack, phoneNumber, aadhaarData, verificationType = 'above18' }) => {
+const OtpVerificationStep: React.FC<OtpVerificationStepProps> = ({ onNext, onBack, phoneNumber, documentData, verificationType = 'above18' }) => {
   const [step, setStep] = useState<'generate' | 'verify'>('generate');
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,14 +27,14 @@ const OtpVerificationStep: React.FC<OtpVerificationStepProps> = ({ onNext, onBac
 
   const API_BASE = 'http://localhost:8000';
 
-  const handleApiCall = async (url: string, formData: FormData) => {
+  const handleApiCall = async (url: string, params: Record<string, string>) => {
     try {
       const response = await fetch(`${API_BASE}${url}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams(formData).toString(),
+        body: new URLSearchParams(params).toString(),
       });
 
       const result = await response.json();
@@ -66,10 +57,11 @@ const OtpVerificationStep: React.FC<OtpVerificationStepProps> = ({ onNext, onBac
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('phone', phoneNumber);
+      const params = {
+        phone: phoneNumber
+      };
 
-      const result = await handleApiCall('/api/otp/generate-otp', formData);
+      const result = await handleApiCall('/api/otp/generate-otp', params);
 
       if (result.success) {
         setOtpSent(true);
@@ -97,29 +89,27 @@ const OtpVerificationStep: React.FC<OtpVerificationStepProps> = ({ onNext, onBac
         return;
       }
 
-      const formData = new FormData();
-      formData.append('phone', phoneNumber);
-      formData.append('otp', otp);
-
-      // Add wallet address - this is critical for the Kafka message
-      formData.append('wallet_address', currentAccount.address);
-
-      // Auto-set DID based on verification type (0 for above18, 1 for citizenship)
-      formData.append('did', getDid().toString());
+      const params: Record<string, string> = {
+        phone: phoneNumber,
+        otp: otp,
+        wallet_address: currentAccount.address,
+        did: getDid().toString(),
+      };
 
       console.log(`🔍 Frontend: Sending OTP verification with DID: ${getDid()} for verification type: ${verificationType}`);
       console.log(`🔍 Frontend: Wallet address: ${currentAccount.address}`);
 
-      // Add Aadhaar data if available
-      if (aadhaarData) {
-        if (aadhaarData.aadhaar_number) formData.append('aadhaar_number', aadhaarData.aadhaar_number);
-        if (aadhaarData.dob) formData.append('date_of_birth', aadhaarData.dob);
-        if (aadhaarData.name) formData.append('full_name', aadhaarData.name);
-        if (aadhaarData.gender) formData.append('gender', aadhaarData.gender);
-        formData.append('verification_type', verificationType);
+      // Add document data if available
+      if (documentData) {
+        if (documentData.document_number) params.document_number = documentData.document_number;
+        if (documentData.dob) params.date_of_birth = documentData.dob;
+        if (documentData.name) params.full_name = documentData.name;
+        if (documentData.gender) params.gender = documentData.gender;
+        params.document_type = documentData.document_type || '';
+        params.verification_type = verificationType;
       }
 
-      const result = await handleApiCall('/api/otp/verify-otp', formData);
+      const result = await handleApiCall('/api/otp/verify-otp', params);
 
       if (result.success) {
         localStorage.setItem('verificationCompleted', 'true');

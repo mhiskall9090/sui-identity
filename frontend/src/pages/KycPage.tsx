@@ -4,28 +4,16 @@ import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@
 import { Transaction } from '@mysten/sui/transactions';
 import { motion } from 'framer-motion';
 import LightRays from '../components/ui/lightRays';
-import AadhaarUploadStep from '../components/AadhaarUploadStep';
-import FaceVerificationStep from '../components/FaceVerificationStep';
-import OtpVerificationStep from '../components/OtpVerificationStep';
+import { DocumentUploadStep, FaceVerificationStep, OtpVerificationStep, NFTClaimSuccessModal, useDocumentType, DocumentData } from '../components';
 import { useVerificationListener } from '../hooks/useEventListener';
 import { documentEncryptionService, DocumentEncryptionService } from '../services/encryptionService';
 import { credentialService } from '../services/credentialService';
-import { NFTClaimSuccessModal } from '../components/NFTClaimSuccess';
 import { colors } from '../brand';
 
-interface AadhaarData {
-  name?: string;
-  dob?: string;
-  gender?: string;
-  phone_number?: string;
-  address?: string;
-  aadhaar_number?: string;
-  aadhaar_photo_base64?: string;
-}
-
 function KycPage() {
-  const [step, setStep] = useState('aadhaar');
-  const [aadhaarData, setAadhaarData] = useState<AadhaarData | null>(null);
+  const [step, setStep] = useState('document');
+  const [documentData, setDocumentData] = useState<DocumentData | null>(null);
+  const { documentType } = useDocumentType();
   const [otpVerified, setOtpVerified] = useState(false);
   const [encryptionResult, setEncryptionResult] = useState<{
     blobId?: string;
@@ -51,7 +39,7 @@ function KycPage() {
   
   // Get verification type from location state or default
   // const verificationType = location.state?.verificationType || 'Verify Above 18';
-  const verificationDescription = location.state?.verificationDescription || 'Verify your age using Aadhaar document. Required for DeFi protocols and Gaming protocols on SUI ecosystem.';
+  const verificationDescription = location.state?.verificationDescription || 'Verify your identity using your Ghana Card or Ghana Passport. Required for DeFi protocols and Gaming protocols on SUI ecosystem.';
   
   // Sui client and transaction execution
   const suiClient = useSuiClient();
@@ -73,7 +61,7 @@ function KycPage() {
 
 
   const handleNext = () => {
-    if (step === 'aadhaar') setStep('face');
+    if (step === 'document') setStep('face');
     else if (step === 'face') setStep('otp');
     else if (step === 'otp') {
       // After OTP verification, start listening for blockchain events
@@ -115,7 +103,7 @@ function KycPage() {
   }, [currentAccount]);
 
   const handleDocumentEncryption = useCallback(async () => {
-    if (!aadhaarData?.aadhaar_photo_base64 || !currentAccount?.address) {
+    if (!documentData?.document_photo_base64 || !currentAccount?.address) {
       console.error('Missing document data or wallet address');
       return;
     }
@@ -125,14 +113,15 @@ function KycPage() {
       setStep('encrypting');
       
       // Convert base64 to File object for encryption
-      const base64Data = aadhaarData.aadhaar_photo_base64;
+      const base64Data = documentData.document_photo_base64;
       const byteCharacters = atob(base64Data);
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
       }
       const byteArray = new Uint8Array(byteNumbers);
-      const file = new File([byteArray], 'aadhaar-document.jpg', { type: 'image/jpeg' });
+      const fileName = `${documentData.document_type || 'document'}.jpg`;
+      const file = new File([byteArray], fileName, { type: 'image/jpeg' });
       
       console.log('📄 Document converted to file:', file.name, file.size, 'bytes');
       
@@ -143,7 +132,7 @@ function KycPage() {
       console.error('❌ Error in document encryption:', error);
       setStep('error');
     }
-  }, [aadhaarData?.aadhaar_photo_base64, currentAccount?.address, encryptAndUploadDocument]);
+  }, [documentData?.document_photo_base64, currentAccount?.address, documentData?.document_type, encryptAndUploadDocument]);
 
   // Handle successful verification from event listener
   useEffect(() => {
@@ -234,7 +223,7 @@ function KycPage() {
               const nftData = {
                 nftId,
                 title: 'Age Verification NFT',
-                description: 'Verified above 18 years using Aadhaar document',
+                description: `Verified above 18 years using ${documentType === 'ghana_card' ? 'Ghana Card' : 'Ghana Passport'}`,
                 suiExplorerUrl: `https://suiscan.xyz/testnet/object/${nftId}`,
                 walrusUrl: encryptionResult.blobId ? `https://walrus.site/blob/${encryptionResult.blobId}` : undefined,
                 transactionHash: result.digest,
@@ -248,7 +237,7 @@ function KycPage() {
                   nftId,
                   didType: userDidId || '1',
                   title: 'Age Verification NFT',
-                  description: 'Verified above 18 years using Aadhaar document',
+                  description: `Verified above 18 years using ${documentType === 'ghana_card' ? 'Ghana Card' : 'Ghana Passport'}`,
                   suiExplorerUrl: `https://suiscan.xyz/testnet/object/${nftId}`,
                   walrusUrl: encryptionResult.blobId ? `https://walrus.site/blob/${encryptionResult.blobId}` : undefined,
                   blobId: encryptionResult.blobId,
@@ -285,13 +274,13 @@ function KycPage() {
   };
 
   const handleBack = () => {
-    if (step === 'face') setStep('aadhaar');
+    if (step === 'face') setStep('document');
     else if (step === 'otp') setStep('face');
-    else if (step === 'aadhaar') navigate("/dashboard")
+    else if (step === 'document') navigate("/dashboard")
   };
 
-  const handleAadhaarUpload = (data: AadhaarData) => {
-    setAadhaarData(data);
+  const handleDocumentUpload = (data: DocumentData) => {
+    setDocumentData(data);
   };
 
   return (
@@ -351,32 +340,33 @@ function KycPage() {
               className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border max-w-2xl mx-auto"
               style={{ borderColor: `${colors.primary}30` }}
             >
-            {step === 'aadhaar' && (
+            {step === 'document' && documentType && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <AadhaarUploadStep
+                <DocumentUploadStep
                   onNext={handleNext}
                   onBack={handleBack}
-                  onFileUpload={handleAadhaarUpload}
+                  onFileUpload={handleDocumentUpload}
+                  documentType={documentType}
                 />
               </motion.div>
             )}
-            {step === 'face' && aadhaarData && (
+            {step === 'face' && documentData && (
               <FaceVerificationStep
                 onNext={handleNext}
                 onBack={handleBack}
-                aadhaarData={aadhaarData}
+                documentData={documentData}
               />
             )}
-            {step === 'otp' && aadhaarData && (
+            {step === 'otp' && documentData && (
               <OtpVerificationStep
                 onNext={handleNext}
                 onBack={handleBack}
-                phoneNumber={aadhaarData.phone_number || ''}
-                aadhaarData={aadhaarData}
+                phoneNumber={documentData.phone_number || ''}
+                documentData={documentData}
               />
             )}
             {step === 'waiting' && (

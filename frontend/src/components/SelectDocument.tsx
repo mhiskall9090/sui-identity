@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
+import { useDocumentType } from './DocumentTypeContext';
+import { DocumentType } from './types';
 
 interface Country {
   code: string;
-  name: string;
-}
-
-interface DocumentType {
-  id: string;
   name: string;
 }
 
@@ -60,33 +57,40 @@ const countries: Country[] = [
   { code: 'RU', name: 'Russia' }, { code: 'SA', name: 'Saudi Arabia' }, { code: 'SG', name: 'Singapore' }
 ];
 
-const allDocumentTypes: DocumentType[] = [
-  { id: 'passport', name: 'Passport' },
-  { id: 'drivers_license', name: "Driver's License" },
-  { id: 'adhaar_card', name: 'Aadhaar Card' }
+const allDocumentTypes = [
+  { id: 'ghana_card' as const, name: 'Ghana Card' },
+  { id: 'ghana_passport' as const, name: 'Ghana Passport' },
+  { id: 'aadhaar_card' as const, name: 'Aadhaar Card' },
+  { id: 'passport' as const, name: 'Passport' },
+  { id: 'drivers_license' as const, name: "Driver's License" }
 ];
 
 const SelectDocument: React.FC<SelectDocumentProps> = ({ onNext }) => {
   const [country, setCountry] = useState('');
-  const [documentType, setDocumentType] = useState('');
+  const [selectedDocumentType, setSelectedDocumentType] = useState('');
+
+  const { setDocumentType } = useDocumentType();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (country && documentType) {
+    if (country && selectedDocumentType) {
       const selectedCountryObj = countries.find(c => c.code === country);
       if (selectedCountryObj) {
         localStorage.setItem('selectedCountryName', selectedCountryObj.name);
-        localStorage.setItem('documentType', documentType);
+        localStorage.setItem('documentType', selectedDocumentType);
+        setDocumentType(selectedDocumentType as DocumentType);
         console.log('Selected country:', selectedCountryObj.name);
-        console.log('Selected document type:', documentType);
+        console.log('Selected document type:', selectedDocumentType);
       }
       onNext();
     }
   };
 
   const filteredDocuments = country === 'IN'
-    ? allDocumentTypes.filter(doc => doc.id === 'drivers_license' || doc.id === 'adhaar_card' || doc.id === "passport")
-    : allDocumentTypes.filter(doc => doc.id !== 'adhaar_card');
+    ? allDocumentTypes.filter(doc => doc.id === 'aadhaar_card' || doc.id === 'passport' || doc.id === 'drivers_license')
+    : country === 'GH'
+    ? allDocumentTypes.filter(doc => doc.id === 'ghana_card' || doc.id === 'ghana_passport')
+    : allDocumentTypes.filter(doc => !['aadhaar_card', 'ghana_card', 'ghana_passport'].includes(doc.id));
 
   return (
     <form
@@ -112,7 +116,7 @@ const SelectDocument: React.FC<SelectDocumentProps> = ({ onNext }) => {
             value={country}
             onChange={(e) => {
               setCountry(e.target.value);
-              setDocumentType('');
+              setSelectedDocumentType('');
             }}
             required
           >
@@ -131,8 +135,8 @@ const SelectDocument: React.FC<SelectDocumentProps> = ({ onNext }) => {
           </label>
           <select
             className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg bg-white focus:ring focus:ring-blue-300"
-            value={documentType}
-            onChange={(e) => setDocumentType(e.target.value)}
+            value={selectedDocumentType}
+            onChange={(e) => setSelectedDocumentType(e.target.value)}
             required
           >
             <option value="">Select document type</option>

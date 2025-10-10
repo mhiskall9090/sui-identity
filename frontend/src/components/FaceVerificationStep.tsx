@@ -2,16 +2,9 @@ import React, { useRef, useState } from 'react';
 import { ChevronLeft, Camera, RotateCcw, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import Webcam from 'react-webcam';
 import { colors } from '../brand';
+import { DocumentData } from './types';
 
-interface AadhaarData {
-  name?: string;
-  dob?: string;
-  gender?: string;
-  phone_number?: string;
-  address?: string;
-  aadhaar_number?: string;
-  aadhaar_photo_base64?: string;
-}
+// Reuse shared DocumentData type for flexibility across Ghana/Aadhaar flows
 
 interface FaceMatchResult {
   match: boolean;
@@ -23,10 +16,10 @@ interface FaceMatchResult {
 interface FaceVerificationStepProps {
   onNext: () => void;
   onBack: () => void;
-  aadhaarData: AadhaarData;
+  documentData?: DocumentData;
 }
 
-const FaceVerificationStep: React.FC<FaceVerificationStepProps> = ({ onNext, onBack }) => {
+const FaceVerificationStep: React.FC<FaceVerificationStepProps> = ({ onNext, onBack, documentData }) => {
   const webcamRef = useRef<Webcam>(null);
   const [faceImage, setFaceImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,13 +33,13 @@ const FaceVerificationStep: React.FC<FaceVerificationStepProps> = ({ onNext, onB
   //   setError(null);
     
   //   try {
-  //     if (!aadhaarData?.aadhaar_photo_base64) {
-  //       setError('Aadhaar photo not found. Please upload Aadhaar card first.');
+  //     if (!documentData?.document_photo_base64) {
+  //       setError('Document photo not found. Please upload the document first.');
   //       return;
   //     }
 
-  //     if (!aadhaarData?.phone_number) {
-  //       setError('Phone number not found in Aadhaar data. Cannot proceed with verification.');
+  //     if (!documentData?.phone_number) {
+  //       setError('Phone number not found in extracted document data. Cannot proceed with verification.');
   //       return;
   //     }
       

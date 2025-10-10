@@ -7,10 +7,13 @@ import User from './pages/User';
 import GovernmentDecryptionPage from './pages/GovernmentDecryptionPage';
 import AdminLogin from './pages/AdminLogin';
 
+import { DocumentTypeProvider } from './components';
+
 const App: React.FC = () => {
   return (
     <Router>
-      <div className="App outfit">
+      <DocumentTypeProvider>
+        <div className="App outfit">
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/kyc" element={<KycPage />} />
@@ -39,6 +42,7 @@ const App: React.FC = () => {
           progressClassName="toast-progress"
         />
       </div>
+      </DocumentTypeProvider>
     </Router>
   );
 };
