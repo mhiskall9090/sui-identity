@@ -13,9 +13,10 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
-from app.routers import face, otp, user, kyc, encryption, credentials, document_verification
-from app.services.ocr_service import OCRService
-from app.services.face_recognition_service import get_face_recognition_service
+# from app.routers import face, otp, user, kyc, encryption, credentials, document_verification
+from app.routers import otp, user, kyc, encryption, credentials, document_verification
+# from app.services.ocr_service import OCRService
+# from app.services.face_recognition_service import get_face_recognition_service
 from app.services.otp_service import OTPService
 from app.services.user_service import get_user_service
 from app.services.encryption_service import encryption_service
@@ -51,18 +52,17 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to connect to MongoDB: {e}")
         raise
     # Initialize services
-    ocr_service = OCRService()
-    face_recognition_service = get_face_recognition_service()
+    # ocr_service = OCRService()
+    # face_recognition_service = get_face_recognition_service()
     otp_service = OTPService()
     
     # Test Redis connection
     redis_service = get_redis_service()
     try:
-        redis_health = await redis_service.health_check()
-        if redis_health['connected']:
-            logger.info(f"✅ Redis connected successfully to {redis_health['host']}:{redis_health['port']}")
+        if await redis_service.test_connection():
+            logger.info(f"✅ Redis connected successfully to {redis_service.redis_host}:{redis_service.redis_port}")
         else:
-            logger.warning(f"⚠️ Redis connection failed: {redis_health.get('error', 'Unknown error')}")
+            logger.warning(f"⚠️ Redis connection failed: {redis_service.connection_error}")
     except Exception as e:
         logger.warning(f"⚠️ Redis connection test failed: {e}")
     
@@ -109,7 +109,7 @@ app.add_middleware(
 app.include_router(user.router, prefix="/api", tags=["User Management"])
 app.include_router(kyc.router, prefix="/api", tags=["KYC Verification"])
 app.include_router(document_verification.router, prefix="/api/identity", tags=["Identity Document Processing"])
-app.include_router(face.router, prefix="/api/face", tags=["Face Recognition"])
+# app.include_router(face.router, prefix="/api/face", tags=["Face Recognition"])
 app.include_router(otp.router, prefix="/api/otp", tags=["OTP Verification"])
 app.include_router(encryption.router, prefix="/api", tags=["Encryption Metadata"])
 app.include_router(credentials.router, prefix="/api", tags=["Credentials Management"])

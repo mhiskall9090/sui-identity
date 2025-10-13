@@ -7,7 +7,7 @@ use sui::coin::{Self, Coin};
 use sui::sui::SUI;
 use sui::event;
 use sui::clock::{Self, Clock};
-use std::string::String;
+use std::string::String; 
 
 // Error codes
 const EInvalidProtocol: u64 = 1;

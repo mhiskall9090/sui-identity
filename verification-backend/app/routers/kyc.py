@@ -10,8 +10,8 @@ import uuid
 from app.models.schemas import APIResponse
 from app.models.user import VerificationLog
 from app.services.user_service import get_user_service, UserService
-from app.services.ocr_service import get_ocr_service, OCRService
-from app.services.face_recognition_service import get_face_recognition_service, HighAccuracyFaceService
+# from app.services.ocr_service import get_ocr_service, OCRService
+# from app.services.face_recognition_service import get_face_recognition_service, HighAccuracyFaceService
 from app.services.otp_service import get_otp_service, OTPService
 
 logger = logging.getLogger(__name__)
@@ -27,8 +27,8 @@ async def start_kyc_verification(
     face_images: List[UploadFile] = File(...),
     country: str = Form('IN', description="Country code (e.g. 'IN' for India, 'GH' for Ghana)"),
     doc_type: str = Form('national_id', description="Document type (e.g. 'national_id','passport')"),
-    ocr_service: OCRService = Depends(get_ocr_service),
-    face_service: HighAccuracyFaceService = Depends(get_face_recognition_service),
+    # ocr_service: OCRService = Depends(get_ocr_service),
+    # face_service: HighAccuracyFaceService = Depends(get_face_recognition_service),
     otp_service: OTPService = Depends(get_otp_service)
 ):
     """Start KYC verification: Process ID document + Face images, then send OTP.
@@ -46,89 +46,22 @@ async def start_kyc_verification(
         # Generate unique session ID for this verification
         session_id = str(uuid.uuid4())
         
-        # Step 1: Process ID document based on country/doc_type
-        doc_bytes = await aadhaar_image.read()
-        try:
-            if country.upper() == 'GH':
-                # Use Ghana-specific extraction helper
-                gh_result = ocr_service.extract_ghana_id_data(doc_bytes, doc_type=doc_type)
-                if not gh_result.get('success'):
-                    raise ValueError(gh_result.get('error', 'Failed to extract Ghana ID data'))
+        # Step 1: Process ID document - MOCKED
+        id_data = {
+            'name': "Mock User",
+            'id_number': "123456789012",
+            'dob': "01/01/1990",
+            'phone_number': "+919999999999", # Using a placeholder
+            'photo_base64': "",
+            'raw_text': "mock raw text",
+            'country': 'IN',
+            'doc_type': 'aadhaar'
+        }
+        
+        # Step 2: Process face images and perform face matching - MOCKED
+        face_verification_passed = True
+        successful_matches = len(face_images)
 
-                id_data = {
-                    'name': gh_result.get('name'),
-                    'id_number': gh_result.get('id_number') or gh_result.get('ghana_card_number'),
-                    'dob': gh_result.get('dob'),
-                    'phone_number': gh_result.get('phone_number'),
-                    'photo_base64': gh_result.get('photo_base64'),
-                    'raw_text': gh_result.get('raw_text'),
-                    'country': 'GH',
-                    'doc_type': doc_type
-                }
-            else:
-                # Default to Aadhaar flow for India
-                aadhaar_data = ocr_service.extract_aadhaar_data(doc_bytes)
-                if not aadhaar_data.get('name') or not aadhaar_data.get('aadhaar_number'):
-                    raise ValueError("Could not extract essential Aadhaar information")
-                id_data = {
-                    'name': aadhaar_data.get('name'),
-                    'id_number': aadhaar_data.get('aadhaar_number'),
-                    'dob': aadhaar_data.get('dob'),
-                    'phone_number': aadhaar_data.get('phone_number'),
-                    'photo_base64': aadhaar_data.get('aadhaar_photo_base64'),
-                    'raw_text': aadhaar_data.get('raw_text'),
-                    'country': 'IN',
-                    'doc_type': 'aadhaar'
-                }
-
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Document processing failed: {str(e)}")
-        
-        # Step 2: Process face images and perform face matching
-        if len(face_images) < 3:
-            raise HTTPException(
-                status_code=400, 
-                detail="At least 3 face images required for verification"
-            )
-        
-        face_match_results = []
-        
-        try:
-            # Convert face images to base64
-            face_images_b64 = []
-            for face_img in face_images:
-                face_bytes = await face_img.read()
-                face_b64 = base64.b64encode(face_bytes).decode('utf-8')
-                face_images_b64.append(face_b64)
-            
-            # Use extracted ID photo for comparison
-            id_photo_b64 = id_data.get('photo_base64')
-            if id_photo_b64:
-                for i, face_b64 in enumerate(face_images_b64):
-                    try:
-                        match_result = face_service.compare_faces(id_photo_b64, face_b64)
-                        face_match_results.append({
-                            'image_index': i,
-                            'match_result': match_result
-                        })
-                    except Exception as e:
-                        logger.warning(f"Face comparison failed for image {i}: {e}")
-                        face_match_results.append({
-                            'image_index': i,
-                            'match_result': {'verified': False, 'error': str(e)}
-                        })
-            else:
-                raise ValueError("Could not extract photo from ID document")
-                
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Face matching failed: {str(e)}")
-        
-        # Step 3: Evaluate face verification result
-        successful_matches = sum(1 for result in face_match_results 
-                               if result['match_result'].get('verified', False))
-        
-        face_verification_passed = successful_matches >= 2  # At least 2 out of 3+ images should match
-        
         if not face_verification_passed:
             raise HTTPException(
                 status_code=400, 
@@ -136,7 +69,7 @@ async def start_kyc_verification(
             )
         
         # Step 4: Extract phone number and send OTP
-        phone_number = id_data.get('phone_number')  # Updated key name
+        phone_number = id_data.get('phone_number')
         if not phone_number:
             raise HTTPException(
                 status_code=400,
@@ -319,8 +252,8 @@ async def legacy_complete_kyc_verification(
     aadhaar_image: UploadFile = File(...),
     face_images: List[UploadFile] = File(...),
     user_service: UserService = Depends(get_user_service),
-    ocr_service: OCRService = Depends(get_ocr_service),
-    face_service: HighAccuracyFaceService = Depends(get_face_recognition_service),
+    # ocr_service: OCRService = Depends(get_ocr_service),
+    # face_service: HighAccuracyFaceService = Depends(get_face_recognition_service),
     otp_service: OTPService = Depends(get_otp_service)
 ):
     """Legacy complete KYC verification flow (for backward compatibility)"""
@@ -335,67 +268,19 @@ async def legacy_complete_kyc_verification(
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"OTP verification failed: {str(e)}")
         
-        # Step 2: Process Aadhaar document
-        aadhaar_bytes = await aadhaar_image.read()
-        
-        try:
-            aadhaar_data = ocr_service.extract_aadhaar_data(aadhaar_bytes)
-            aadhaar_photo = ocr_service.extract_photo_from_aadhaar(aadhaar_bytes)
-            
-            if not aadhaar_data.get('name') or not aadhaar_data.get('aadhaar_number'):
-                raise ValueError("Could not extract essential Aadhaar information")
+        # Step 2: Process Aadhaar document - MOCKED
+        aadhaar_data = {
+            'name': 'Legacy Mock User',
+            'aadhaar_number': '987654321098',
+            'dob': '02/02/1992',
+            'gender': 'Male'
+        }
                 
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Aadhaar processing failed: {str(e)}")
-        
-        # Step 3: Process face images and perform face matching
-        if len(face_images) < 3:
-            raise HTTPException(
-                status_code=400, 
-                detail="At least 3 face images required for verification"
-            )
-        
-        face_match_results = []
-        
-        try:
-            # Convert face images to base64
-            face_images_b64 = []
-            for face_img in face_images:
-                face_bytes = await face_img.read()
-                face_b64 = base64.b64encode(face_bytes).decode('utf-8')
-                face_images_b64.append(face_b64)
-            
-            # Convert Aadhaar photo to base64
-            if aadhaar_photo:
-                aadhaar_photo_b64 = base64.b64encode(aadhaar_photo).decode('utf-8')
-                
-                # Compare each face image with Aadhaar photo
-                for i, face_b64 in enumerate(face_images_b64):
-                    try:
-                        match_result = face_service.compare_faces(aadhaar_photo_b64, face_b64)
-                        face_match_results.append({
-                            'image_index': i,
-                            'match_result': match_result
-                        })
-                    except Exception as e:
-                        logger.warning(f"Face comparison failed for image {i}: {e}")
-                        face_match_results.append({
-                            'image_index': i,
-                            'match_result': {'verified': False, 'error': str(e)}
-                        })
-            else:
-                raise ValueError("Could not extract photo from Aadhaar card")
-                
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Face matching failed: {str(e)}")
+        # Step 3: Process face images and perform face matching - MOCKED
+        face_verification_passed = True
+        successful_matches = len(face_images)
         
         # Step 4: Evaluate overall verification result
-        successful_matches = sum(1 for result in face_match_results 
-                               if result['match_result'].get('verified', False))
-        
-        face_verification_passed = successful_matches >= 2  # At least 2 out of 3+ images should match
-        
-        # Step 5: Save user data to database if all verifications pass
         verification_successful = face_verification_passed
         
         if verification_successful:

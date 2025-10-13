@@ -1,0 +1,10 @@
+# Docker ignore for Python backend
+
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.env
+.DS_Store

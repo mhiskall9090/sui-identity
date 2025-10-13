@@ -17,16 +17,16 @@ class RedisService:
         self.redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
         self.redis_host = os.getenv('REDIS_HOST', 'localhost')
         self.redis_port = int(os.getenv('REDIS_PORT', '6379'))
-        self.redis_password = os.getenv('REDIS_PASSWORD', '')
-        self.redis_username = os.getenv('REDIS_USERNAME', 'default')
+        self.redis_password = os.getenv('REDIS_PASSWORD')
+        self.redis_username = os.getenv('REDIS_USERNAME')
         self.stream_name = os.getenv('REDIS_STREAM_NAME', 'verification_stream')
         
         # Redis connection configuration
         self.redis_config = {
             'host': self.redis_host,
             'port': self.redis_port,
-            'password': self.redis_password if self.redis_password else None,
-            'username': self.redis_username if self.redis_username != 'default' else None,
+            'password': self.redis_password,
+            'username': self.redis_username,
             'decode_responses': False,  # Keep as bytes for stream compatibility
             'socket_timeout': 30,
             'socket_connect_timeout': 30,
